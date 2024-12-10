@@ -1,0 +1,120 @@
+stages:
+  - quality-check     # Code styling (Processes to follow python pep 8 standard)
+  - docker-build  
+  - testing           # Test the image after being added to docker
+  - docker-deploy
+
+variables:
+  #Note: this gitlab instances doesn't seem to have TLS setup as such
+  DOCKER_HOST: "tcp://docker:2375"  #Note: Use non-TLS endpoint
+  DOCKER_TLS_CERTDIR: ""            #Note: Disable TLS
+
+  # Note: Using the prefix PIPE_VAR on variable made avilable to the entire pipeline 
+  PIPE_VAR_DEPLOY_IMAGE_NAME: "$CI_REGISTRY_IMAGE/$CI_PROJECT_NAME"
+  PIPE_VAR_TEST_IMAGE: "$CI_REGISTRY_IMAGE/test-$CI_PROJECT_NAME:test-$CI_COMMIT_SHORT_SHA"
+
+
+# Scans code looking for things to recomend for both best pratices and to follow PEP8 conventions
+pylint:
+  stage: quality-check  
+  image: python:3.13
+  script:
+    - pip install -r requirements.txt
+    - pylint $CI_PROJECT_DIR/monitor
+
+# Scans the import to order them in standard with PEP8
+isort:
+  stage: quality-check
+  image: python:3.13
+  script:
+    - pip install -r requirements.txt
+    - isort . --check-only
+
+# Scans the python code making sure it is a standardised format
+black:
+  stage: quality-check
+  image: python:3.13
+  script:
+    - pip install -r requirements.txt
+    - black . --check
+
+# Job Builds the image to allow testing from its deployment enviroment
+docker-build:
+  stage: docker-build
+  image: docker:20.10-dind
+  services:
+    - name: docker:20.10-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Building image $DOCKER_IMAGE"
+    - docker build -t $PIPE_VAR_TEST_IMAGE .
+    - docker push $PIPE_VAR_TEST_IMAGE
+  tags: 
+    - dockerindocker
+
+
+# Deploys Develop image to allow for development of the image
+docker-develop-deploy:
+  stage: docker-deploy
+  image: docker:20.10-dind
+  services:
+  - name: docker:20.10-dind
+  variables:
+    JOB_VAR_DEPLOY: "$PIPE_VAR_DEPLOY_IMAGE_NAME:develop"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Deploying Develop Image"
+    - docker pull $PIPE_VAR_TEST_IMAGE || true
+    - docker tag $PIPE_VAR_TEST_IMAGE $JOB_VAR_DEPLOY
+    - docker push  $JOB_VAR_DEPLOY
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE != "merge_request_event"' 
+      when: on_success
+    - when: never
+  tags: 
+    - dockerindocker
+
+# Deploys the Latest image to be placed into prod
+docker-latest-deploy:
+  stage: docker-deploy
+  image: docker:20.10-dind
+  services:
+  - name: docker:20.10-dind
+  variables:
+    JOB_VAR_DEPLOY: "$PIPE_VAR_DEPLOY_IMAGE_NAME:latest"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Deploying Develop Image"
+    - docker pull $PIPE_VAR_TEST_IMAGE || true
+    - docker tag $PIPE_VAR_TEST_IMAGE $JOB_VAR_DEPLOY
+    - docker push  $JOB_VAR_DEPLOY
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE != "merge_request_event"'
+      when: on_success
+    - when: never
+  tags: 
+    - dockerindocker
+  
+# Deploys the release image for branches named release/vd*.d*.d* e.g. release/v0.0.1
+docker-release-deploy:
+  stage: docker-deploy
+  image: docker:20.10-dind
+  services:
+  - name: docker:20.10-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Deploying Release Image for $CI_COMMIT_BRANCH"
+    - docker pull $PIPE_VAR_TEST_IMAGE || true
+    - docker tag $PIPE_VAR_TEST_IMAGE "$PIPE_VAR_DEPLOY_IMAGE_NAME:${CI_COMMIT_BRANCH#release/}"
+    - docker push "$PIPE_VAR_DEPLOY_IMAGE_NAME:${CI_COMMIT_BRANCH#release/}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/v[0-9]+\.[0-9]+\.[0-9]+$/ && $CI_PIPELINE_SOURCE != "merge_request_event"'
+      when: on_success
+    - when: never
+  tags:
+    - dockerindocker
+
