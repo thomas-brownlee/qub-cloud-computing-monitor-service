@@ -5,9 +5,9 @@ Is the entry point for sending service down emails
 import textwrap
 from datetime import datetime
 
-from monitor.email_service.authentication import authenticate_gmail
-from monitor.email_service.email_message import create_email_message
-from monitor.email_service.send_email import send_email
+from monitor.src.email_service.authentication import authenticate_gmail
+from monitor.src.email_service.email_message import create_email_message
+from monitor.src.email_service.send_email import send_email
 
 
 def send_service_down(service_name=None):
