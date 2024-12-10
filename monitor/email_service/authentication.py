@@ -1,3 +1,6 @@
+"""
+Holds the authentication for the email api
+"""
 import os
 
 from google.auth.transport.requests import Request
