@@ -13,5 +13,5 @@ RUN apk add --no-cache curl
 
 RUN pip install --no-compile --no-cache-dir  -r /app/requirements.txt 
 
-COPY ./monitor /app
+COPY ./monitor /app/monitor
 
