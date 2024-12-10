@@ -36,9 +36,10 @@ def generate_service_down_email(service_name, downtime_start):
 
         Dear User,
 
-        We regret to inform you that the {service_name} service on 
-        QUBeditoron3000 is currently down. Our technical team is 
-        aware of the issue and is working diligently to resolve it.
+        We regret to inform you that the {service_name} service
+        on QUBeditoron3000 is currently down. Our technical team
+        is aware of the issue and is working diligently to 
+        resolve it.
 
         **Details:**
         - **Service Name:** {service_name}
