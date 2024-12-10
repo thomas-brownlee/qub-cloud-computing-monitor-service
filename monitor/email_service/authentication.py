@@ -1,5 +1,9 @@
 """
 Holds the authentication for the email api
+
+Credit module created using :
+    * google gmail api docs https://developers.google.com/gmail/api/quickstart/python#
+    * chat-gpt added support on debugging the major coding issue
 """
 
 import os
