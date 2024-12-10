@@ -1,6 +1,7 @@
 """
 Holds the authentication for the email api
 """
+
 import os
 
 from google.auth.transport.requests import Request
@@ -27,6 +28,6 @@ def authenticate_gmail():
             flow = InstalledAppFlow.from_client_secrets_file(creds_bread_crumb, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run.
-        with open("token.json", "w") as token:
+        with open("token.json", "w", encoding="utf-8", errors="ignore") as token:
             token.write(creds.to_json())
     return build("gmail", "v1", credentials=creds)
