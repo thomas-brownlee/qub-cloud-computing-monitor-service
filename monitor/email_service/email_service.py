@@ -1,4 +1,11 @@
-"""Handles the email service"""
+"""
+Handles the email service
+
+File mostly taken from gmails api documentations https://developers.google.com/gmail/api/quickstart/python
+And chat-gpt added support on debugging the major coding issues
+
+"""
+# pylint: skip-file
 
 import os
 import base64
@@ -16,7 +23,6 @@ def authenticate_gmail():
     creds = None
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials, authenticate with the user.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
