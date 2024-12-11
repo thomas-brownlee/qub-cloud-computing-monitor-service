@@ -47,7 +47,7 @@ services:
       reverse-proxy:
         condition: service_healthy
 
-  spell-checker:
+  spell-check:
     image: repository.hal.davecutting.uk:5005/40324582/editor-spellchecker/editor-spellchecker:latest
     restart: always
     networks:
