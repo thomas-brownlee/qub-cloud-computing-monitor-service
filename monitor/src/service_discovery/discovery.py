@@ -4,7 +4,7 @@ import json
 import os
 import subprocess
 
-connected_network = os.getenv("CLUSTER_NETWORK","cluster_docker-network")
+connected_network = os.getenv("CLUSTER_NETWORK", "cluster_docker-network")
 
 
 def get_docker_containers_in_network():
@@ -69,13 +69,15 @@ def generate_service_directorys(docker_service_responce: dict):
 
     return new_service_list
 
+
 def get_active_services() -> dict | None:
-    """ Handle the generation of the service list """
+    """Handle the generation of the service list"""
     containers = get_docker_containers_in_network()
     if not containers:
         return None
     services = generate_service_directorys(containers)
     return services
+
 
 if __name__ == "__main__":
     get_active_services()
