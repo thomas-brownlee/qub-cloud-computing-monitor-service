@@ -23,5 +23,16 @@ def get_docker_containers_in_network():
     except subprocess.CalledProcessError as error:
         return False
 
+
+def safe_get(d, keys, default=None):
+    """Safely traverse a nested dictionary using a list of keys."""
+    for key in keys:
+        d = d.get(key, default)
+        if d is default:  
+            return default
+    return d
+
+
+
 if __name__ == "__main__":
     containers = get_docker_containers_in_network()
