@@ -37,6 +37,11 @@ def generate_service_directorys(docker_service_responce: dict):
     new_service_list = {}
 
     for container in docker_service_responce:
+        state = container.get("State")
+        
+        if state != "running":
+            continue # Skip because service isnt active
+
         container_id = container.get("Id")
         if not container_id:
             continue  # skip to next
