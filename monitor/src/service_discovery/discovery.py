@@ -17,10 +17,8 @@ def get_docker_containers_in_network():
         ]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
 
-        containers = json.loads(result.stdout)
-
-        return containers
-    except subprocess.CalledProcessError as error:
+        return json.loads(result.stdout)
+    except subprocess.CalledProcessError:
         return False
 
 
@@ -33,9 +31,10 @@ def safe_get(d, keys, default=None):
     return d
 
 
-def generate_service_directorys(containers: dict):
+def generate_service_directorys(docker_service_responce: dict):
+    """Loops through the responce from the api to get the values from the service"""
     new_service_list = {}
-    for container in containers:
+    for container in docker_service_responce:
         connected_network = "cluster_docker-network"
         container_id = container.get("Id")
         if not container_id:
@@ -61,9 +60,7 @@ def generate_service_directorys(containers: dict):
         print(f"IP Address: {ip_address}")
 
         # Create new entry as a dictionary with service name as key
-        new_entry = {
-            f"http://{ip_address}:{port}": container_id
-        }
+        new_entry = {f"http://{ip_address}:{port}": container_id}
 
         # If "active_services" is not yet in new_service_list, create it
         if "active_services" not in new_service_list:
@@ -73,6 +70,7 @@ def generate_service_directorys(containers: dict):
         new_service_list["active_services"].update({service_name: new_entry})
 
     return new_service_list
+
 
 if __name__ == "__main__":
     containers = get_docker_containers_in_network()
