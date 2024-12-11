@@ -1,5 +1,6 @@
 name: "cluster "
 services:
+
   front-end:
     image: repository.hal.davecutting.uk:5005/40324582/editor-frontend/editor-frontend:latest
     ports:
@@ -37,8 +38,8 @@ services:
     depends_on:
       reverse-proxy:
         condition: service_healthy
-
-  average-length:
+  
+  average-word-length:
     image: repository.hal.davecutting.uk:5005/40324582/editor-average-length-of-word/editor-average-length-of-word:latest
     restart: always
     networks:

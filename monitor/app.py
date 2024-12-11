@@ -1,1 +1,0 @@
-"""Holds the starting point for the monitoring service"""

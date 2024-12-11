@@ -16,3 +16,4 @@ RUN pip install --no-compile --no-cache-dir  -r /app/requirements.txt
 
 COPY ./monitor /app/monitor
 
+CMD ["python", "/app/monitor/src/app.py"]
