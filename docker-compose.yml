@@ -1,0 +1,114 @@
+name: "cluster "
+services:
+  front-end:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-frontend/editor-frontend:latest
+    ports:
+      - "80:80"
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  char-count:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-charcount/editor-charcount:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  full-stop-count:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-fullstop-count/editor-fullstop-count:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  count-palindrome:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-palindrone-count/editor-palindrone-count:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  average-length:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-average-length-of-word/editor-average-length-of-word:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  spell-checker:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-spellchecker/editor-spellchecker:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+
+  word-count:
+    image: repository.hal.davecutting.uk:5005/40324582/editor-wordcount/editor-wordcount:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  database:
+    image: repository.hal.davecutting.uk:5005/40324582/database-service/database-service:latest
+    restart: always
+    networks:
+      - docker-network
+    depends_on:
+      reverse-proxy:
+        condition: service_healthy
+
+  monitor:
+    image: monitoring:latest
+    restart: always
+    networks:
+      - docker-network
+    build:
+      context: .
+    stdin_open: true
+    tty: true
+    environment:
+      - docker-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  reverse-proxy:
+    image: repository.hal.davecutting.uk:5005/40324582/reverse_proxy/reverse_proxy:latest
+    restart: always
+    ports:
+      - "9000:5000"
+    networks:
+      - docker-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/reverse-proxy/service/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  docker-network:
+    driver: bridge
+
+# docker compose up -d 
+# docker compose down
+# http://localhost:9000/api/full-stop-count?text=hello.......
