@@ -1,9 +1,10 @@
 """Calls on the docker compose api to get the information about other container in the image"""
 
 import json
+import os
 import subprocess
 
-dictionary = {"active_services": {"service-name": {"host_address": "containers"}}}
+connected_network = os.getenv("CLUSTER_NETWORK","cluster_docker-network")
 
 
 def get_docker_containers_in_network():
@@ -34,8 +35,8 @@ def safe_get(d, keys, default=None):
 def generate_service_directorys(docker_service_responce: dict):
     """Loops through the responce from the api to get the values from the service"""
     new_service_list = {}
+
     for container in docker_service_responce:
-        connected_network = "cluster_docker-network"
         container_id = container.get("Id")
         if not container_id:
             continue  # skip to next
@@ -44,20 +45,17 @@ def generate_service_directorys(docker_service_responce: dict):
             if item["Type"] == "tcp":
                 port = item["PrivatePort"]
         if not port:
-            print("No TCP port found, skipping container.")
             continue  # skip to the next items
 
         path = ["Labels", "com.docker.compose.service"]
         service_name = safe_get(container, path)
         if not service_name:
             continue  # skip to the next items
-        print(f"Service Name: {service_name}")
 
         path = ["NetworkSettings", "Networks", connected_network, "IPAddress"]
         ip_address = safe_get(container, path)
         if not ip_address:
             continue  # skip to the next items
-        print(f"IP Address: {ip_address}")
 
         # Create new entry as a dictionary with service name as key
         new_entry = {f"http://{ip_address}:{port}": container_id}
@@ -71,8 +69,13 @@ def generate_service_directorys(docker_service_responce: dict):
 
     return new_service_list
 
+def get_active_services() -> dict | None:
+    """ Handle the generation of the service list """
+    containers = get_docker_containers_in_network()
+    if not containers:
+        return None
+    services = generate_service_directorys(containers)
+    return services
 
 if __name__ == "__main__":
-    containers = get_docker_containers_in_network()
-    if containers:
-        print(generate_service_directorys(containers))
+    get_active_services()

@@ -3,7 +3,8 @@ FROM python:3.13-alpine
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1\
     PYTHONPATH=/app\
-    PROJECT_DIRECTORY=/app
+    PROJECT_DIRECTORY=/app\
+    CLUSTER_NETWORK="cluster_docker-network"
 
 WORKDIR /app
 
