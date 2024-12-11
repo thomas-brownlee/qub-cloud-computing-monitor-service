@@ -76,4 +76,5 @@ def generate_service_directorys(containers: dict):
 
 if __name__ == "__main__":
     containers = get_docker_containers_in_network()
-    print(generate_service_directorys(containers))
+    if containers:
+        print(generate_service_directorys(containers))
