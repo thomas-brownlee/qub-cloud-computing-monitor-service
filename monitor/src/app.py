@@ -1,5 +1,8 @@
+"""
+Holds the main application code for the monitor
+"""
+
 import html
-import json
 import threading
 import time
 
@@ -14,15 +17,19 @@ CORS(app)
 
 service_status = {}
 service_list = {}
+service_time_average = {}
+service_time_latest = {}
 
 
 def service_down(service_name: str):
-    pass
+    """Holds the api command to report a service is down"""
+    return service_name
 
 
 def ping_services():
-    global service_status
-    global service_list
+    """ Runs a service ping on all services allowed to be checked """
+    global service_status   # pylint: disable=W0602
+    global service_list     # pylint: disable=W0603
     exclude_services = ["front-end", "monitor"]
     latest_service_list = discovery.get_active_services()
 
@@ -36,18 +43,18 @@ def ping_services():
             try:
                 url = f"{address}/api/{service}/service/ping"
                 response = requests.get(url, timeout=10)
-                statusUp = response.status_code > 199 and response.status_code < 299
+                status_up = response.status_code > 199 and response.status_code < 299
 
             except requests.exceptions.RequestException:
-                statusUp = False
+                status_up = False
 
-            if not statusUp:
+            if not status_up:
                 service_down(service)
 
             service_status[address] = {
                 "service_name": service,
                 "last_check": time.time(),
-                "status": statusUp,
+                "status": status_up,
             }
 
     removed_services = {
@@ -67,15 +74,9 @@ def ping_services():
 
     service_list = latest_service_list
 
-
-def test_services():
-    global service_time_average
-    global service_time_latest
-    pass
-
-
-def generate_html():
-    global service_status
+def generate_html():#
+    """ Generates the html responce """
+    global service_status # pylint: disable=W0602
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -107,7 +108,7 @@ def generate_html():
         row_class = "up" if service["status"] else "down"
         html_content += f"""
         <tr class="{row_class}">
-          <td>{html.escape(service['service_name'])}  
+          <td>{html.escape(service['service_name'])}
           <td>{html.escape(url)}</td>
           <td>{time.ctime(service['last_check'])}</td>
           <td>{status_text}</td>
@@ -123,7 +124,8 @@ def generate_html():
 
 
 def update_status():
-    global service_list
+    """Runs the update loop"""
+    global service_list # pylint: disable=W0603
     service_list = discovery.get_active_services()
 
     while True:
@@ -133,6 +135,7 @@ def update_status():
 
 @app.route("/")
 def get_status_html():
+    """Hosts the html site"""
     return Response(
         generate_html(),
         mimetype="text/html",
