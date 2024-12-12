@@ -4,6 +4,8 @@ import threading
 from flask import Flask, Response
 from flask_cors import CORS
 import html
+import json
+from datetime import datetime
 
 from monitor.src.service_discovery import discovery
 
@@ -16,6 +18,8 @@ service_time_average = {}
 service_time_latest = {}
 service_list = {}
 
+def service_down(service_name: str):
+    pass
 
 def ping_services():
     global service_status
@@ -32,20 +36,26 @@ def ping_services():
             try:
                 url = f"{address}/api/{service}/service/ping"
                 response = requests.get(url, timeout=10)
-                if response.status_code != 200:
-                    pass  # Implements service down
-                json_data = response.json()
-                if json_data["status"] != "active":
-                    pass  # Implement service down
+                service_status[address] = {
+                    "service_name":service,
+                    "last_check": time.time(),
+                    "service_name": service,
+                    "status": response.status_code
+                    }
+                if response.status_code == 200:
+                    continue # skip service down ping
             except requests.exceptions.RequestException:
-                pass  # Implement service down
+                print("service failed api call")
+
+            service_down(service)
+
     removed_services = {
         key: service_list["active_services"][key]
         for key in service_list["active_services"]
         if key not in latest_service_list["active_services"]
     }
     for services in removed_services:
-        pass  # Implement service down
+        service_down(service)
     service_list = latest_service_list
 
 
@@ -53,6 +63,53 @@ def test_services():
     global service_time_average
     global service_time_latest
     pass
+
+def generate_html():
+    global service_status
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Service Status</title>
+      <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        .up { background-color: lightgreen; }
+        .down { background-color: lightcoral; }
+      </style>
+      <meta http-equiv="refresh" content="5" />
+    </head>
+    <body>
+        <h1>Service Status</h1>
+        <table id="serviceTable">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>URL</th>
+                    <th>Last Checked</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    for url, service in service_status.items():
+        status_text = "Up" if service['status'] else "Down"
+        row_class = "up" if service['status'] else "down"
+        html_content += f"""
+        <tr class="{row_class}">
+          <td>{html.escape(service['service_name'])}  
+          <td>{html.escape(url)}</td>
+          <td>{time.ctime(service['last_check'])}</td>
+          <td>{status_text}</td>
+        </tr>
+        """
+    html_content += """
+            </tbody>
+        </table>
+    </body>
+    </html>
+    """
+    return html_content
 
 
 def update_status():
@@ -65,20 +122,18 @@ def update_status():
         if count <= 30:
             test_services()
             count = 0
-        print(service_list)
         time.sleep(5)
 
 
 @app.route("/")
 def get_status_html():
     return Response(
-        f" <!DOCTYPE html><html><head><title>Service Status</title></head><body>{service_list}</body></html>",
+        generate_html(),
         mimetype="text/html",
     )
 
 
 if __name__ == "__main__":
-    # thread = threading.Thread(target=update_status, daemon=True)
-    # thread.start()
-    # app.run(debug=True, use_reloader=False, threaded=True, port=80)
-    update_status()
+    thread = threading.Thread(target=update_status, daemon=True)
+    thread.start()
+    app.run(debug=True, use_reloader=False, threaded=True, host="0.0.0.0", port=80)
