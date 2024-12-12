@@ -1,21 +1,18 @@
-import requests
-import time
-import threading
-from flask import Flask, Response
-from flask_cors import CORS
 import html
 import json
-from datetime import datetime
+import threading
+import time
+
+import requests
+from flask import Flask, Response
+from flask_cors import CORS
 
 from monitor.src.service_discovery import discovery
-
 
 app = Flask(__name__)
 CORS(app)
 
 service_status = {}
-service_time_average = {}
-service_time_latest = {}
 service_list = {}
 
 def service_down(service_name: str):
@@ -32,30 +29,40 @@ def ping_services():
             continue
 
         ip_addresses = latest_service_list["active_services"][service].keys()
+
         for address in ip_addresses:
             try:
                 url = f"{address}/api/{service}/service/ping"
                 response = requests.get(url, timeout=10)
-                service_status[address] = {
-                    "service_name":service,
-                    "last_check": time.time(),
-                    "service_name": service,
-                    "status": response.status_code
-                    }
-                if response.status_code == 200:
-                    continue # skip service down ping
-            except requests.exceptions.RequestException:
-                print("service failed api call")
+                statusUp = (response.status_code > 199 and response.status_code < 299)
 
-            service_down(service)
+            except requests.exceptions.RequestException:
+                statusUp = False
+
+            if not statusUp:
+                service_down(service)
+            
+            service_status[address] = {
+                "service_name":service,
+                "last_check": time.time(),
+                "status": statusUp
+                }
 
     removed_services = {
         key: service_list["active_services"][key]
         for key in service_list["active_services"]
         if key not in latest_service_list["active_services"]
     }
-    for services in removed_services:
-        service_down(service)
+    for service in removed_services:
+        for service_addresses in removed_services[service].keys():
+            service_status[service_addresses] = {
+                    "service_name":service,
+                    "last_check": time.time(),
+                    "status": False
+                    }
+            
+            service_down(service_addresses)
+
     service_list = latest_service_list
 
 
@@ -115,13 +122,9 @@ def generate_html():
 def update_status():
     global service_list
     service_list = discovery.get_active_services()
-    count = 0
+
     while True:
-        count += 1
         ping_services()
-        if count <= 30:
-            test_services()
-            count = 0
         time.sleep(5)
 
 
