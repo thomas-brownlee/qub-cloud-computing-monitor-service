@@ -10,8 +10,9 @@ import requests
 from flask import Flask, Response
 from flask_cors import CORS
 
-from monitor.src.service_discovery import discovery
 from monitor.src.send_down_anounce import generate_issue
+from monitor.src.service_discovery import discovery
+
 app = Flask(__name__)
 CORS(app)
 
@@ -64,7 +65,7 @@ def ping_services():
                 "last_check": time.time(),
                 "status": False,
             }
-            generate_issue(service, address)
+            generate_issue(service, service_addresses)
     service_list = latest_service_list
 
 
