@@ -1,37 +1,25 @@
-"""
-Holds the authentication for the email api
-
-Credit module created using :
-    * google gmail api docs https://developers.google.com/gmail/api/quickstart/python#
-    * chat-gpt added support on debugging the major coding issue
-"""
-
 import os
-
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-project_folder = os.getenv("PYTHONPATH")
+# Path to your service account key file
+PROJECT_FOLDER = os.getenv("PROJECT_DIRECTORY")
+SERVICE_ACCOUNT_FILE = f'{PROJECT_FOLDER}\monitor\src\email_service\credentials.json'
 
+# Define the required scopes
+SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
 def authenticate_gmail():
-    """Authenticate and get Gmail API service."""
-    creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            creds_bread_crumb = (
-                f"{project_folder}/monitor/email_service/credentials.json"
-            )
-            flow = InstalledAppFlow.from_client_secrets_file(creds_bread_crumb, SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run.
-        with open("token.json", "w", encoding="utf-8", errors="ignore") as token:
-            token.write(creds.to_json())
-    return build("gmail", "v1", credentials=creds)
+    """Authenticate using service account credentials and get Gmail API service."""
+    creds = Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    )
+    
+    # If you need to impersonate another user (e.g., send emails from another user's Gmail account), use:
+    # creds = creds.with_subject('user@example.com')
+    
+    return build('gmail', 'v1', credentials=creds)
+
+# Example usage
+service = authenticate_gmail()
+# Now you can use the Gmail API service to send emails, etc.

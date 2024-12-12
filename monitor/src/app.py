@@ -32,8 +32,11 @@ def ping_services():
                         service_down_email.send_service_down(service)
                 except requests.exceptions.RequestException:
                     service_down_email.send_service_down(service)
+        removed_services = {key: existing_service_list['active_services'][key] for key in existing_service_list['active_services'] if key not in latest_service_list['active_services']}
+        for services in removed_services:
+            service_down_email.send_service_down("service down")
         existing_service_list = latest_service_list
-        print(existing_service_list)
+
 
 
 if __name__ == "__main__":
