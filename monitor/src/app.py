@@ -15,8 +15,10 @@ CORS(app)
 service_status = {}
 service_list = {}
 
+
 def service_down(service_name: str):
     pass
+
 
 def ping_services():
     global service_status
@@ -34,19 +36,19 @@ def ping_services():
             try:
                 url = f"{address}/api/{service}/service/ping"
                 response = requests.get(url, timeout=10)
-                statusUp = (response.status_code > 199 and response.status_code < 299)
+                statusUp = response.status_code > 199 and response.status_code < 299
 
             except requests.exceptions.RequestException:
                 statusUp = False
 
             if not statusUp:
                 service_down(service)
-            
+
             service_status[address] = {
-                "service_name":service,
+                "service_name": service,
                 "last_check": time.time(),
-                "status": statusUp
-                }
+                "status": statusUp,
+            }
 
     removed_services = {
         key: service_list["active_services"][key]
@@ -56,11 +58,11 @@ def ping_services():
     for service in removed_services:
         for service_addresses in removed_services[service].keys():
             service_status[service_addresses] = {
-                    "service_name":service,
-                    "last_check": time.time(),
-                    "status": False
-                    }
-            
+                "service_name": service,
+                "last_check": time.time(),
+                "status": False,
+            }
+
             service_down(service_addresses)
 
     service_list = latest_service_list
@@ -70,6 +72,7 @@ def test_services():
     global service_time_average
     global service_time_latest
     pass
+
 
 def generate_html():
     global service_status
@@ -100,8 +103,8 @@ def generate_html():
             <tbody>
     """
     for url, service in service_status.items():
-        status_text = "Up" if service['status'] else "Down"
-        row_class = "up" if service['status'] else "down"
+        status_text = "Up" if service["status"] else "Down"
+        row_class = "up" if service["status"] else "down"
         html_content += f"""
         <tr class="{row_class}">
           <td>{html.escape(service['service_name'])}  
