@@ -11,7 +11,7 @@ from flask import Flask, Response
 from flask_cors import CORS
 
 from monitor.src.service_discovery import discovery
-
+from monitor.src.send_down_anounce import generate_issue
 app = Flask(__name__)
 CORS(app)
 
@@ -19,11 +19,6 @@ service_status = {}
 service_list = {}
 service_time_average = {}
 service_time_latest = {}
-
-
-def service_down(service_name: str):
-    """Holds the api command to report a service is down"""
-    return service_name
 
 
 def ping_services():
@@ -49,7 +44,7 @@ def ping_services():
                 status_up = False
 
             if not status_up:
-                service_down(service)
+                generate_issue(service, address)
 
             service_status[address] = {
                 "service_name": service,
@@ -69,9 +64,7 @@ def ping_services():
                 "last_check": time.time(),
                 "status": False,
             }
-
-            service_down(service_addresses)
-
+            generate_issue(service, address)
     service_list = latest_service_list
 
 

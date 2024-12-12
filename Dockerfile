@@ -4,7 +4,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1\
     PYTHONPATH=/app\
     PROJECT_DIRECTORY=/app\
-    CLUSTER_NETWORK="cluster_docker-network"
+    CLUSTER_NETWORK="cluster_docker-network"\
+    GITLAB_URL=https://repository.hal.davecutting.uk/\
+    PROJECT_ID=6546\
+    GITLAB_TOKEN=glpat-wf2KZrJyYhEQx-tbKUiS
 
 WORKDIR /app
 
