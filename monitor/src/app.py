@@ -27,9 +27,9 @@ def service_down(service_name: str):
 
 
 def ping_services():
-    """ Runs a service ping on all services allowed to be checked """
-    global service_status   # pylint: disable=W0602
-    global service_list     # pylint: disable=W0603
+    """Runs a service ping on all services allowed to be checked"""
+    global service_status  # pylint: disable=W0602
+    global service_list  # pylint: disable=W0603
     exclude_services = ["front-end", "monitor"]
     latest_service_list = discovery.get_active_services()
 
@@ -74,9 +74,10 @@ def ping_services():
 
     service_list = latest_service_list
 
-def generate_html():#
-    """ Generates the html responce """
-    global service_status # pylint: disable=W0602
+
+def generate_html():  #
+    """Generates the html responce"""
+    global service_status  # pylint: disable=W0602
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -125,7 +126,7 @@ def generate_html():#
 
 def update_status():
     """Runs the update loop"""
-    global service_list # pylint: disable=W0603
+    global service_list  # pylint: disable=W0603
     service_list = discovery.get_active_services()
 
     while True:
